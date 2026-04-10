@@ -1,25 +1,32 @@
 # Boogeyman-2
 
 ## Objective
-Investigate a phishing-led intrusion on a corporate Windows environment. The challenge covered the full attack chain from malicious document delivery through macro execution, to C2 establishment, credential dumping, and lateral movement.
+Perform digital forensics on a phishing email and a Windows memory dump
+to reconstruct the full malware execution chain using olevba and Volatility3.
 
 ### Skills Learned
-- Malicious macro and VBA code analysis
-- C2 beacon identification in network logs
-- Credential dumping detection (LSASS access)
-- Lateral movement tracking via Windows event logs
-- Multi-source log correlation (Sysmon, network, Windows Security)
-- MITRE ATT&CK multi-tactic mapping
+- Phishing email artifact analysis (Evolution Mail)
+- VBA macro extraction with olevba (C2 URL, JS dropper, LOLBin execution)
+- MD5 hash extraction for IOC documentation
+- Volatility3: pslist, pstree, netscan, filescan, memmap dump
+- Process tree reconstruction from memory
+- Scheduled task persistence detection via string extraction
+- C2 IP identification via windows.netscan
 
 ### Tools Used
-- Sysmon (process creation, network connections, file events)
-- Windows Security Event Logs
-- Wireshark / PCAP analysis
-- MITRE ATT&CK framework
-- Timeline Explorer
+- olevba (oletools)
+- Volatility3 (windows.pslist, windows.pstree, windows.netscan,
+  windows.filescan, windows.memmap)
+- strings + grep
+- Evolution Mail
 
 ## Steps
-The investigation started with identifying the malicious document that served as the initial access vector, analyzing the macro code within. Sysmon Event ID 1 revealed the child process spawned post-macro execution, confirming code execution. Network logs were analyzed to identify the C2 callback. LSASS access events (Sysmon Event ID 10) confirmed credential dumping attempts. Lateral movement was tracked via Event ID 4624 logon events from the compromised host to adjacent machines. The complete kill chain was reconstructed and mapped to MITRE ATT&CK.
+Email opened in Evolution Mail — malicious Word doc attached. olevba revealed
+macro with C2 URL (`boogeymanisback` domain), `update.js` dropper, and LOLBin
+execution. Memory dump analyzed with Volatility3 — `updater.exe` identified
+via pstree. C2 IP confirmed via netscan. File location found via filescan.
+Process memory dumped, strings extracted — scheduled task revealed via
+`strings | grep schtasks`.
 
-*Ref 1: Sysmon Event ID 1 showing malicious child process spawned by Office macro*
-*Ref 2: Event ID 4624 logon chain confirming lateral movement to target workstation*
+*Ref 1: olevba output — C2 URL, update.js path, LOLBin execution*
+*Ref 2: Volatility3 pstree and netscan confirming updater.exe and C2 IP*
